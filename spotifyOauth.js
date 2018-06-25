@@ -59,6 +59,7 @@ app.get('/login', function(req, res) {
         }));
 });
 
+
 app.get('/callback', function(req, res) {
 
     // your application requests refresh and access tokens
@@ -146,19 +147,6 @@ app.get('/callback', function(req, res) {
         });
     }
 });
-
-/*
-for(let count=0; count<3; count++) {
-
-    spotify_info.find({}, function (err, artists) {
-        if (err)
-            console.error(error);
-    let string = JSON.stringify(artists[count].artist)
-            console.log(string)
-        module.exports = string
-    })
-}
-*/
 
 app.get('/refresh_token', function(req, res) {
 
