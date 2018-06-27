@@ -26,7 +26,7 @@ const spotify_info = require('./spotify_model')
 
 let app = express();
 
-app.use(express.static(__dirname + '/public'))
+router.use(express.static(__dirname + '/public'))
     .use(cors())
     .use(cookieParser());
 
@@ -42,7 +42,7 @@ let generateRandomString = function(length) {
 };
 let stateKey = 'spotify_auth_state';
 
-app.get('/login', function(req, res) {
+router.get('/login', function(req, res) {
 
     let state = generateRandomString(16);
     res.cookie(stateKey, state);
@@ -60,7 +60,7 @@ app.get('/login', function(req, res) {
 });
 
 
-app.get('/callback', function(req, res) {
+router.get('/callback', function(req, res) {
 
     // your application requests refresh and access tokens
     // after checking the state parameter
@@ -96,6 +96,7 @@ app.get('/callback', function(req, res) {
                     refresh_token = body.refresh_token;
                 url = 'https://api.spotify.com/v1/users/spotifycharts/playlists/1H6NwhJTyicXHBvEK9yIsp/tracks?limit=3'
 //37i9dQZEVXbLRQDuF5jeBp - top charts
+                //1H6NwhJTyicXHBvEK9yIsp
                 let options = {
                     url: url,
                     headers: {'Authorization': 'Bearer ' + access_token},
@@ -106,38 +107,31 @@ app.get('/callback', function(req, res) {
                 for(let count = 0; count<3; count++) {
                     // use the access token to access the Spotify Web API
                     request.get(options, function (error, response, body) {
-
                         let artistfromSpotify = body.items[in_count].track.artists[0].name;
                         let  trackfromSpotify = body.items[in_count].track.name;
-                        console.log(artistfromSpotify)
-                         console.log(trackfromSpotify)
 
-                        app.post('/db', function(req,res,next){
+                        //console.log(artistfromSpotify)
+                         //console.log(trackfromSpotify)
+
                             newArtist = new spotify_info({
                                 artist: artistfromSpotify,
                                 track: trackfromSpotify
                             })
 
-                            newArtist.save(function(error){{
-                                res.send(newArtist)
-                                console.log("artist saved")}
-                                // console.log(spotify_info.schema.obj.artist)
-                                if(error){
+                            newArtist.save(function(error) {
+                                    console.log("artist saved")
+                                if (error) {
                                     console.error(error)
                                 }
-                        })
+                            })
+                            console.log(newArtist.artist)
 
-                        })
                         in_count = in_count + 1;
                     });
                 }
 
-                // we can also pass the token to the browser to make requests from there
-                res.redirect('/#' +
-                    querystring.stringify({
-                        access_token: access_token,
-                        refresh_token: refresh_token
-                    }));
+                res.redirect('http://localhost:4200')
+
             } else {
                 res.redirect('/#' +
                     querystring.stringify({
@@ -148,30 +142,7 @@ app.get('/callback', function(req, res) {
     }
 });
 
-app.get('/refresh_token', function(req, res) {
 
-    // requesting access token from refresh token
-    let refresh_token = req.query.refresh_token;
-    let authOptions = {
-        url: 'https://accounts.spotify.com/api/token',
-        headers: { 'Authorization': 'Basic ' + (new Buffer(spotifyConfig.client_id + ':' + spotifyConfig.client_secret).toString('base64')) },
-        form: {
-            grant_type: 'refresh_token',
-            refresh_token: refresh_token
-        },
-        json: true
-    };
-
-    request.post(authOptions, function(error, response, body) {
-        if (!error && response.statusCode === 200) {
-            let access_token = body.access_token;
-            res.send({
-                'access_token': access_token
-            });
-        }
-    });
-});
 //end here for routes
-
-//module.exports = router;
-app.listen(8888)
+//app.listen(8888)
+module.exports = router;
